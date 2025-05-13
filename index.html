@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Oferta HTML</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 1000px; margin: auto; }
+    textarea, input { width: 100%; margin-bottom: 10px; font-family: monospace; padding: 10px; }
+    textarea { height: 200px; }
+    button { padding: 10px 20px; font-size: 16px; }
+    #output { white-space: pre-wrap; background: #f4f4f4; padding: 15px; border: 1px solid #ccc; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Oferta HTML com IA</h1>
+  <p>1. Cole abaixo o link do AliExpress <strong>ou</strong> o script bruto do produto.</p>
+  <input type="text" id="productUrl" placeholder="Cole o link do AliExpress aqui (opcional)" />
+  <textarea id="productScript" placeholder="Ou cole aqui o script bruto do produto..."></textarea>
+  <button onclick="generatePrompt()">Gerar Prompt para GPT</button>
+
+  <div id="output"></div>
+
+  <script>
+    async function fetchAliExpressDescription(url) {
+      try {
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+        const html = data.contents;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const descContainer = doc.querySelector('.detail-desc-decorate-richtext') || doc.querySelector('#product-description');
+        return descContainer ? descContainer.innerHTML : '';
+      } catch (e) {
+        return 'Descrição não pôde ser carregada. Verifique o link.';
+      }
+    }
+
+    async function generatePrompt() {
+      const url = document.getElementById('productUrl').value.trim();
+      let script = document.getElementById('productScript').value.trim();
+
+      if (!script && url) {
+        document.getElementById('output').textContent = 'Buscando descrição do AliExpress...';
+        script = await fetchAliExpressDescription(url);
+      }
+
+      if (!script) {
+        document.getElementById('output').textContent = 'Por favor, forneça um script ou um link válido do AliExpress.';
+        return;
+      }
+
+      const prompt = `Você é um especialista em copywriting para produtos infantis. Sua tarefa é ler e interpretar o conteúdo bruto abaixo (em HTML misturado com imagens e texto), identificar os pontos fortes do produto e gerar uma oferta em HTML formatado e persuasivo.
+
+REGRAS:
+- NÃO mencionar preço.
+- Criar um título principal forte com foco em desenvolvimento infantil ou diversão educativa.
+- Transformar os benefícios citados em blocos persuasivos com <h2> e frases emocionalmente envolventes.
+- Posicionar imagens entre os blocos com <img src=\"URL_AQUI\" width=\"600\" />.
+- Incluir uma seção final com “Especificações” e “Itens Inclusos”.
+- Encerre com um parágrafo que motive a mãe a agir, mostrando o impacto na vida do filho.
+- NÃO copiar o texto original literalmente — resuma, interprete e reescreva com linguagem emocional e acessível para o público-alvo (mães com filhos pequenos).
+- Gerar HTML completo e limpo, pronto para colar em uma landing page ou loja online.
+- NÃO adicionar preços fictícios nem valores simbólicos.
+
+Agora analise o seguinte conteúdo bruto e gere a oferta HTML formatada:
+
+${script}`;
+
+      document.getElementById('output').textContent = prompt;
+    }
+  </script>
+</body>
+</html>
