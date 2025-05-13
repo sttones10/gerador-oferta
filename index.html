@@ -29,8 +29,8 @@
         const html = data.contents;
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        const descContainer = doc.querySelector('.detail-desc-decorate-richtext') || doc.querySelector('#product-description');
-        return descContainer ? descContainer.innerHTML : '';
+        const descContainer = doc.querySelector('#product-description') || doc.querySelector('.detail-desc-decorate-richtext');
+        return descContainer ? descContainer.innerHTML : 'Descrição não encontrada. Verifique o layout da página.';
       } catch (e) {
         return 'Descrição não pôde ser carregada. Verifique o link.';
       }
